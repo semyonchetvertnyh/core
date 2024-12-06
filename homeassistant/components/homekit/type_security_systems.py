@@ -65,7 +65,7 @@ HASS_TO_HOMEKIT_SERVICES = {
 }
 
 HK_TO_SERVICE = {
-    HK_ALARM_AWAY_ARMED: SERVICE_ALARM_ARM_AWAY,
+    HK_ALARM_AWAY_ARMED: (SERVICE_ALARM_ARM_AWAY, SERVICE_ALARM_ARM_VACATION),
     HK_ALARM_STAY_ARMED: SERVICE_ALARM_ARM_HOME,
     HK_ALARM_NIGHT_ARMED: SERVICE_ALARM_ARM_NIGHT,
     HK_ALARM_DISARMED: SERVICE_ALARM_DISARM,
@@ -145,7 +145,13 @@ class SecuritySystem(HomeAccessory):
     def set_security_state(self, value: int) -> None:
         """Move security state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set security state to %d", self.entity_id, value)
-        service = HK_TO_SERVICE[value]
+        if value is not HK_ALARM_AWAY_ARMED:
+            service = HK_TO_SERVICE[value]
+        else:
+            if AlarmControlPanelEntityFeature.ARM_AWAY not in self.supported_states and AlarmControlPanelEntityFeature.ARM_VACATION in self.supported_states:
+                service = HK_TO_SERVICE[value][1] # SERVICE_ALARM_ARM_VACATION
+            else:
+                service = HK_TO_SERVICE[value][0] # SERVICE_ALARM_ARM_AWAY
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._alarm_code:
             params[ATTR_CODE] = self._alarm_code
