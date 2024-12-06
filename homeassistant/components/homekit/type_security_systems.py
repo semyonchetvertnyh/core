@@ -66,6 +66,7 @@ HASS_TO_HOMEKIT_SERVICES = {
 
 HK_TO_SERVICE = {
     HK_ALARM_AWAY_ARMED: SERVICE_ALARM_ARM_AWAY,
+    # HK_ALARM_AWAY_ARMED: SERVICE_ALARM_ARM_AWAY | SERVICE_ALARM_ARM_VACATION, # Или [SERVICE_ALARM_ARM_AWAY, SERVICE_ALARM_ARM_VACATION] - хз...
     HK_ALARM_STAY_ARMED: SERVICE_ALARM_ARM_HOME,
     HK_ALARM_NIGHT_ARMED: SERVICE_ALARM_ARM_NIGHT,
     HK_ALARM_DISARMED: SERVICE_ALARM_DISARM,
@@ -146,6 +147,19 @@ class SecuritySystem(HomeAccessory):
         """Move security state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set security state to %d", self.entity_id, value)
         service = HK_TO_SERVICE[value]
+
+        # Короче, вот здесь я хочу, если value == HK_ALARM_AWAY_ARMED, то добавить доп. проверку
+        # и в зависимости от нее выбирать правильный service из HK_TO_SERVICE.
+        #
+        # if value == HK_ALARM_AWAY_ARMED:
+        #     if self.supported_states has not AlarmControlPanelEntityFeature.ARM_AWAY
+        #        && 
+        #        self.supported_states has AlarmControlPanelEntityFeature.ARM_VACATION:
+        #         service = HK_TO_SERVICE[value][1] # SERVICE_ALARM_ARM_VACATION
+        #     else:
+        #         service = HK_TO_SERVICE[value][0] # SERVICE_ALARM_ARM_AWAY
+        #
+
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._alarm_code:
             params[ATTR_CODE] = self._alarm_code
